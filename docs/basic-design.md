@@ -277,12 +277,15 @@ volumes:
 
 ### 環境変数一覧(backend/.env)
 
+AWSへの認証は2方式のいずれかで行います。両方設定した場合はAPIキー方式が優先されます。
+
 | 変数名 | 説明 |
 | --- | --- |
-| AWS_ACCESS_KEY_ID | Bedrock呼び出し用のアクセスキー |
-| AWS_SECRET_ACCESS_KEY | Bedrock呼び出し用のシークレットキー |
+| AWS_BEARER_TOKEN_BEDROCK | 【方式A・推奨】Bedrock APIキー(ベアラートークン)。Claude Code等と共通のキーを使い回せる |
+| AWS_ACCESS_KEY_ID | 【方式B】Bedrock呼び出し用のアクセスキー(方式Aを使う場合は不要) |
+| AWS_SECRET_ACCESS_KEY | 【方式B】Bedrock呼び出し用のシークレットキー(方式Aを使う場合は不要) |
 | AWS_REGION | Bedrockが有効なリージョン |
-| BEDROCK_MODEL_ID | 使用するClaudeのモデルID |
+| BEDROCK_MODEL_ID | 使用するClaudeのモデルID(リージョンによっては`jp.anthropic....`のような推論プロファイルID) |
 | DB_URL | MySQL接続先(Docker Compose利用時は`jdbc:mysql://mysql:3306/menu_maker`) |
 | DB_USER / DB_PASSWORD | MySQL接続用の認証情報 |
 

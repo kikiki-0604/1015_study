@@ -37,13 +37,17 @@ cd menu-maker
 cp backend/.env.example backend/.env
 ```
 
-`backend/.env`をテキストエディタで開き、以下を埋めます。
+`backend/.env`をテキストエディタで開き、以下を埋めます。Bedrock APIキー(Claude Code拡張と共通のキー)を持っている場合は方式Aだけで十分です。
 
 ```
-AWS_ACCESS_KEY_ID=配布された値
-AWS_SECRET_ACCESS_KEY=配布された値
+# 方式A(推奨): Bedrock APIキーを使う
+AWS_BEARER_TOKEN_BEDROCK=配布された値
 AWS_REGION=配布された値
 BEDROCK_MODEL_ID=配布された値
+
+# 方式B: 従来のアクセスキーを使う場合のみ埋める(方式Aを使うなら空欄でOK)
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
 ```
 
 **注意**: `.env`は絶対にGitHubにpushしないでください(`.gitignore`で除外済みのはずですが、`git status`で`.env`が候補に出ていないか一度確認すると安心です)。

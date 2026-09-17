@@ -23,7 +23,7 @@ dependencies {
     implementation("com.mysql:mysql-connector-j")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("software.amazon.awssdk:bedrockruntime:2.28.11")
+    implementation("software.amazon.awssdk:bedrockruntime:2.42.41")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
