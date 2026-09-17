@@ -360,3 +360,40 @@ button {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ---------- nutrition table ---------- */
+
+.nutrition-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.nutrition-table th,
+.nutrition-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+}
+
+.nutrition-table tr:last-child th,
+.nutrition-table tr:last-child td {
+  border-bottom: none;
+}
+
+.nutrition-table th {
+  color: var(--color-text-muted);
+  font-weight: 500;
+  width: 40%;
+}
+
+.nutrition-note {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0 0 8px;
+}

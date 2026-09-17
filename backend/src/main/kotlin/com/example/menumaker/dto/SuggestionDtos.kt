@@ -11,12 +11,20 @@ data class SuggestionRequest(
 
 data class AiCandidate(
     val name: String,
-    val description: String
+    val description: String,
+    val calories: Int,
+    val fat: Int,
+    val sugar: Int,
+    val carbs: Int
 )
 
 data class Candidate(
     val name: String,
     val description: String,
+    val calories: Int,
+    val fat: Int,
+    val sugar: Int,
+    val carbs: Int,
     val recipeUrl: String
 )
 

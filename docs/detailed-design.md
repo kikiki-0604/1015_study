@@ -41,7 +41,8 @@ com.example.menumaker
 src/
 ├─ pages/
 │   ├─ IngredientInputPage.tsx   # 食材入力画面
-│   ├─ CandidateListPage.tsx     # 候補一覧画面
+│   ├─ CandidateListPage.tsx     # 候補一覧画面(選択のみ)
+│   ├─ CandidateDetailPage.tsx   # 候補詳細画面(栄養情報+作るボタン)
 │   └─ HistoryPage.tsx           # 履歴画面
 ├─ components/
 │   ├─ IngredientTagInput.tsx    # 食材タグの入力・削除
@@ -51,20 +52,21 @@ src/
 │   └─ client.ts                 # fetchラッパー、baseURL管理
 ├─ types/
 │   └─ index.ts                   # Candidate, Record型定義
-└─ App.tsx / main.tsx              # ルーティング
+└─ App.tsx / main.tsx              # ルーティング、選択中候補の状態管理
 ```
 
 | コンポーネント | 責務 |
 | --- | --- |
 | IngredientInputPage | 食材の入力受付、送信、ローディング表示 |
 | IngredientTagInput | 食材の追加・削除のUIロジック(親から値と更新関数を受け取る) |
-| CandidateListPage | 5候補の表示、「完成」ボタン押下時の登録処理 |
-| CandidateCard | 1候補の表示と、レシピを見る/完成ボタンのクリック通知(propsで受け渡し) |
+| CandidateListPage | 5候補の表示、「これに決める」ボタン押下で選択状態を更新し詳細画面へ遷移 |
+| CandidateCard | 1候補の表示と、選択ボタンのクリック通知(propsで受け渡し) |
+| CandidateDetailPage | 選択済み候補の栄養情報表示、「この料理を作る」押下時のレシピ遷移+記録処理 |
 | HistoryPage | 記録一覧の取得と表示、空状態の表示 |
 | RecordRow | 1件の記録表示とレシピ遷移ボタン |
 | client.ts | `/api/suggestions`・`/api/records`へのfetch呼び出しを共通化 |
 
-状態管理はReactの`useState`/`useEffect`のみで十分な規模のため、外部の状態管理ライブラリは導入しません。
+選択中の候補(`selectedCandidate`)は`App.tsx`で状態管理し、`CandidateListPage`が更新、`CandidateDetailPage`が参照します。状態管理はReactの`useState`/`useEffect`のみで十分な規模のため、外部の状態管理ライブラリは導入しません。
 
 ## 処理詳細仕様
 
@@ -73,7 +75,7 @@ src/
 1. `ingredients`が空、または要素数が0件ならバリデーションエラーを投げる(呼び出し元のControllerでチェック済みの場合は省略可)
 2. 食材リストから、Bedrock用のプロンプト文字列を組み立てる(例: 「食材: 卵, 玉ねぎ。作れる料理を5つ、name/descriptionを持つJSON配列のみで出力してください」)
 3. `BedrockClient.invoke(prompt)`を呼び出す
-4. 返却テキストをJSONとしてパースし、`List<Candidate>`(name, description)に変換する
+4. 返却テキストをJSONとしてパースし、`List<AiCandidate>`(name, description, calories, fat, sugar, carbs)に変換する
 5. パース失敗時は1回だけ再試行(同じプロンプトで再呼び出し)し、再度失敗したら`AiResponseException`を投げる
 6. 各candidateの`name`から検索URLを組み立て、`recipeUrl`として付与する(URLエンコード必須)
 7. `SuggestionResponse(candidates)`を返す
@@ -130,8 +132,8 @@ Kotlinの`data class`にJakarta Bean Validationのアノテーション(`@NotBla
 - [ ] 食材を1件だけ入力して送信すると、候補が5件表示される
 - [ ] 食材を複数件入力して送信すると、候補が5件表示される
 - [ ] 食材を空のまま送信すると、エラーメッセージが表示される
-- [ ] 候補の「レシピを見る」を押すと、外部サイトが新しいタブで開く
-- [ ] 候補の「完成」を押すと、当日の日付で記録され、完了メッセージが表示される
+- [ ] 候補の「これに決める」を押すと、候補詳細画面に遷移し栄養情報が表示される
+- [ ] 候補詳細画面の「この料理を作る」を押すと、外部サイトが新しいタブで開き、同時に当日の日付で記録される
 - [ ] 履歴画面に、記録した日付・料理名が新しい順で表示される
 - [ ] 履歴画面で「レシピを見る」を押すと、記録時と同じレシピページに遷移する
 - [ ] 記録が0件のとき、履歴画面に空状態のメッセージが表示される

@@ -1,6 +1,10 @@
 export type Candidate = {
   name: string
   description: string
+  calories: number
+  fat: number
+  sugar: number
+  carbs: number
   recipeUrl: string
 }
 

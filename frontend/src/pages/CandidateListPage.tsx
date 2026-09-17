@@ -1,29 +1,18 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CandidateCard from '../components/CandidateCard'
-import { createRecord } from '../api/client'
 import { Candidate } from '../types'
 
 type Props = {
   candidates: Candidate[]
+  onSelect: (candidate: Candidate) => void
 }
 
-export default function CandidateListPage({ candidates }: Props) {
-  const [message, setMessage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [completedNames, setCompletedNames] = useState<string[]>([])
+export default function CandidateListPage({ candidates, onSelect }: Props) {
   const navigate = useNavigate()
 
-  const handleComplete = async (candidate: Candidate) => {
-    setError(null)
-    try {
-      const today = new Date().toISOString().slice(0, 10)
-      await createRecord(candidate.name, candidate.recipeUrl, today)
-      setCompletedNames((prev) => [...prev, candidate.name])
-      setMessage(`「${candidate.name}」を記録しました`)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '記録に失敗しました')
-    }
+  const handleSelect = (candidate: Candidate) => {
+    onSelect(candidate)
+    navigate('/candidates/detail')
   }
 
   if (candidates.length === 0) {
@@ -43,20 +32,12 @@ export default function CandidateListPage({ candidates }: Props) {
     <div className="app-shell">
       <header className="app-header">
         <h1 className="app-title">今日のおすすめ</h1>
-        <p className="app-tagline">気に入った一品を選んでください。</p>
+        <p className="app-tagline">気になる一品を選んでください。</p>
       </header>
-
-      {message && <p className="banner banner-success">{message}</p>}
-      {error && <p className="banner banner-error" role="alert">{error}</p>}
 
       <div className="candidate-grid">
         {candidates.map((candidate) => (
-          <CandidateCard
-            key={candidate.name}
-            candidate={candidate}
-            onComplete={handleComplete}
-            completed={completedNames.includes(candidate.name)}
-          />
+          <CandidateCard key={candidate.name} candidate={candidate} onSelect={handleSelect} />
         ))}
       </div>
 
