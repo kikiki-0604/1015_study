@@ -21,8 +21,9 @@ export default function IngredientTagInput({ ingredients, onChange }: Props) {
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div className="ingredient-row">
         <input
+          className="ingredient-field"
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
@@ -31,18 +32,30 @@ export default function IngredientTagInput({ ingredients, onChange }: Props) {
               addIngredient()
             }
           }}
-          placeholder="例: 卵"
+          placeholder="例: 卵、玉ねぎ、豚こま"
+          aria-label="食材を入力"
         />
-        <button type="button" onClick={addIngredient}>追加</button>
+        <button type="button" className="btn btn-outline" onClick={addIngredient}>
+          追加
+        </button>
       </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-        {ingredients.map((ingredient, index) => (
-          <span key={`${ingredient}-${index}`} style={{ border: '1px solid #ccc', borderRadius: 16, padding: '4px 12px' }}>
-            {ingredient}
-            <button type="button" onClick={() => removeIngredient(index)} style={{ marginLeft: 8 }}>×</button>
-          </span>
-        ))}
-      </div>
+      {ingredients.length > 0 && (
+        <div className="tag-list">
+          {ingredients.map((ingredient, index) => (
+            <span className="tag-chip" key={`${ingredient}-${index}`}>
+              {ingredient}
+              <button
+                type="button"
+                className="tag-chip-remove"
+                onClick={() => removeIngredient(index)}
+                aria-label={`${ingredient}を削除`}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

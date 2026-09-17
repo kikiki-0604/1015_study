@@ -1,20 +1,33 @@
 import { Candidate } from '../types'
+import { CheckIcon, ExternalLinkIcon } from './icons'
 
 type Props = {
   candidate: Candidate
   onComplete: (candidate: Candidate) => void
+  completed: boolean
 }
 
-export default function CandidateCard({ candidate, onComplete }: Props) {
+export default function CandidateCard({ candidate, onComplete, completed }: Props) {
   return (
-    <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16 }}>
-      <h3>{candidate.name}</h3>
-      <p>{candidate.description}</p>
-      <div style={{ display: 'flex', gap: 8 }}>
+    <div className="candidate-card">
+      <h3 className="candidate-name">{candidate.name}</h3>
+      <p className="candidate-description">{candidate.description}</p>
+      <div className="candidate-actions">
         <a href={candidate.recipeUrl} target="_blank" rel="noreferrer">
-          <button type="button">レシピを見る</button>
+          <button type="button" className="btn btn-outline btn-sm">
+            <ExternalLinkIcon />
+            レシピを見る
+          </button>
         </a>
-        <button type="button" onClick={() => onComplete(candidate)}>完成</button>
+        <button
+          type="button"
+          className="btn btn-accent btn-sm"
+          onClick={() => onComplete(candidate)}
+          disabled={completed}
+        >
+          <CheckIcon />
+          {completed ? '記録しました' : '完成'}
+        </button>
       </div>
     </div>
   )

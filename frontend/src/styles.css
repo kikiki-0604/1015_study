@@ -1,0 +1,362 @@
+:root {
+  --color-bg: #f7f2e7;
+  --color-surface: #fffdf8;
+  --color-text: #2b2a25;
+  --color-text-muted: #6b6558;
+  --color-primary: #2f5233;
+  --color-primary-dark: #1f3a22;
+  --color-accent: #c68a00;
+  --color-accent-dark: #a06f00;
+  --color-border: #e3dac5;
+  --color-error-bg: #f6e4dd;
+  --color-error-text: #8a3b24;
+  --color-success-bg: #e8f0e4;
+  --color-success-text: #2f5233;
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --font-heading: "Hiragino Mincho ProN", "Yu Mincho", YuMincho, serif;
+  --font-body: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", "Noto Sans JP",
+    system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--color-primary-dark);
+}
+
+a {
+  color: var(--color-primary);
+}
+
+button {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ---------- layout ---------- */
+
+.app-shell {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+
+.app-header {
+  margin-bottom: 32px;
+}
+
+.app-title {
+  font-size: 32px;
+  letter-spacing: 0.02em;
+}
+
+.app-tagline {
+  color: var(--color-text-muted);
+  font-size: 15px;
+  margin: 0;
+}
+
+.app-nav {
+  margin-top: 16px;
+}
+
+.app-nav a {
+  font-size: 14px;
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 2px;
+}
+
+.app-nav a:hover {
+  border-bottom-color: var(--color-primary);
+}
+
+.section-heading {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.section-lead {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  margin: 0 0 20px;
+}
+
+/* ---------- buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.btn-outline {
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.btn-outline:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-accent {
+  background: var(--color-accent);
+  color: #2b2100;
+}
+
+.btn-accent:hover:not(:disabled) {
+  background: var(--color-accent-dark);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* ---------- ingredient input ---------- */
+
+.ingredient-row {
+  display: flex;
+  gap: 8px;
+}
+
+.ingredient-field {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 15px;
+  color: var(--color-text);
+}
+
+.ingredient-field:focus {
+  border-color: var(--color-primary);
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary-dark);
+  border-radius: 999px;
+  padding: 5px 6px 5px 14px;
+  font-size: 14px;
+}
+
+.tag-chip-remove {
+  border: none;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.tag-chip-remove:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.submit-row {
+  margin-top: 24px;
+}
+
+/* ---------- candidate cards ---------- */
+
+.candidate-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.candidate-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+}
+
+.candidate-name {
+  font-size: 19px;
+  margin-bottom: 6px;
+}
+
+.candidate-description {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+
+.candidate-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---------- banners ---------- */
+
+.banner {
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 14px;
+  margin: 16px 0;
+}
+
+.banner-error {
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
+}
+
+.banner-success {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+/* ---------- history ---------- */
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px dashed var(--color-border);
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 4px;
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.history-date {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  width: 92px;
+  flex-shrink: 0;
+}
+
+.history-name {
+  flex: 1;
+  font-size: 15px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--color-text-muted);
+}
+
+.empty-state-icon {
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+
+.loading-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  padding: 12px 0;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (min-width: 560px) {
+  .candidate-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

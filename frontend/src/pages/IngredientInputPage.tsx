@@ -33,15 +33,34 @@ export default function IngredientInputPage({ onSuggestions }: Props) {
   }
 
   return (
-    <div>
-      <h1>献立メーカー</h1>
-      <nav><Link to="/history">履歴を見る</Link></nav>
-      <p>冷蔵庫にある食材を入力してください。</p>
-      <IngredientTagInput ingredients={ingredients} onChange={setIngredients} />
-      <button type="button" onClick={handleSubmit} disabled={loading} style={{ marginTop: 16 }}>
-        {loading ? '提案を取得中...' : '候補を提案してもらう'}
-      </button>
-      {error && <p role="alert" style={{ color: 'red' }}>{error}</p>}
+    <div className="app-shell">
+      <header className="app-header">
+        <h1 className="app-title">献立メーカー</h1>
+        <p className="app-tagline">冷蔵庫の中身から、今日の一品を。</p>
+        <nav className="app-nav">
+          <Link to="/history">これまでの記録を見る</Link>
+        </nav>
+      </header>
+
+      <section>
+        <h2 className="section-heading">今日ある食材は?</h2>
+        <p className="section-lead">思いついたものから入力してください。Enterでも追加できます。</p>
+        <IngredientTagInput ingredients={ingredients} onChange={setIngredients} />
+      </section>
+
+      <div className="submit-row">
+        <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
+          {loading ? '考え中...' : '候補を探す'}
+        </button>
+        {loading && (
+          <div className="loading-row">
+            <span className="spinner" />
+            AIが献立を考えています
+          </div>
+        )}
+      </div>
+
+      {error && <p className="banner banner-error" role="alert">{error}</p>}
     </div>
   )
 }
