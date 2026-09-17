@@ -10,3 +10,4 @@ backend/.env
 # misc
 *.log
 .DS_Store
+frontend/tsconfig.tsbuildinfo
