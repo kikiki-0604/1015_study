@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import CandidateCard from '../components/CandidateCard'
+import AppHeader from '../components/AppHeader'
 import { Candidate } from '../types'
 
 type Props = {
@@ -30,14 +31,11 @@ export default function CandidateListPage({ candidates, onSelect }: Props) {
 
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <h1 className="app-title">今日のおすすめ</h1>
-        <p className="app-tagline">気になる一品を選んでください。</p>
-      </header>
+      <AppHeader title="今日のおすすめ" tagline="気になる一品を選んでください。" />
 
       <div className="candidate-grid">
-        {candidates.map((candidate) => (
-          <CandidateCard key={candidate.name} candidate={candidate} onSelect={handleSelect} />
+        {candidates.map((candidate, index) => (
+          <CandidateCard key={candidate.name} candidate={candidate} rank={index + 1} onSelect={handleSelect} />
         ))}
       </div>
 

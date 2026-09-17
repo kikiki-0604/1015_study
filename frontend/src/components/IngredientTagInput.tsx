@@ -1,16 +1,23 @@
 import { useState } from 'react'
+import { PlusIcon, SearchIcon } from './icons'
 
 type Props = {
   ingredients: string[]
   onChange: (ingredients: string[]) => void
 }
 
+const QUICK_INGREDIENTS = ['卵', '玉ねぎ', '豚こま', '鶏むね肉', 'キャベツ', 'にんじん', 'じゃがいも', '豆腐', 'もやし', 'ねぎ']
+
 export default function IngredientTagInput({ ingredients, onChange }: Props) {
   const [text, setText] = useState('')
 
-  const addIngredient = () => {
-    const trimmed = text.trim()
+  const addIngredient = (value?: string) => {
+    const trimmed = (value ?? text).trim()
     if (trimmed.length === 0) return
+    if (ingredients.includes(trimmed)) {
+      setText('')
+      return
+    }
     onChange([...ingredients, trimmed])
     setText('')
   }
@@ -22,23 +29,38 @@ export default function IngredientTagInput({ ingredients, onChange }: Props) {
   return (
     <div>
       <div className="ingredient-row">
-        <input
-          className="ingredient-field"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              addIngredient()
-            }
-          }}
-          placeholder="例: 卵、玉ねぎ、豚こま"
-          aria-label="食材を入力"
-        />
-        <button type="button" className="btn btn-outline" onClick={addIngredient}>
+        <div className="ingredient-field-wrap">
+          <SearchIcon />
+          <input
+            className="ingredient-field"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addIngredient()
+              }
+            }}
+            placeholder="例: 卵、玉ねぎ、豚こま"
+            aria-label="食材を入力"
+          />
+        </div>
+        <button type="button" className="btn btn-primary" onClick={() => addIngredient()}>
+          <PlusIcon />
           追加
         </button>
       </div>
+
+      <div className="quick-chip-row">
+        <span className="quick-chip-label">よく使う食材:</span>
+        {QUICK_INGREDIENTS.filter((item) => !ingredients.includes(item)).map((item) => (
+          <button type="button" key={item} className="quick-chip" onClick={() => addIngredient(item)}>
+            <PlusIcon />
+            {item}
+          </button>
+        ))}
+      </div>
+
       {ingredients.length > 0 && (
         <div className="tag-list">
           {ingredients.map((ingredient, index) => (

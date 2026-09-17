@@ -89,7 +89,7 @@ docker compose ps
 | 確認対象 | 方法 | 期待する結果 |
 | --- | --- | --- |
 | フロントエンド | ブラウザで `http://localhost:5173` を開く | 食材入力画面が表示される |
-| バックエンド | ターミナルで `curl http://localhost:8080/api/records` | `[]`(まだ記録がなければ空配列)が返る。エラーなら backend のログを確認 |
+| バックエンド | ターミナルで `curl http://localhost:8080/api/records` | 初期投入されたサンプル記録(肉じゃが、オムライスなど6件)がJSON配列で返る。エラーなら backend のログを確認 |
 | MySQL | `docker compose exec mysql mysql -uroot -ppassword -e "SHOW TABLES;" menu_maker` | `cooking_records`テーブルが表示される |
 
 フロントエンドから実際に食材を入力して送信し、候補が5件表示されればBedrock連携まで含めて正常に動いています。
@@ -107,12 +107,15 @@ docker compose logs -f           # 全部
 
 ### コードを直したら
 
-フロント・バックエンドともにコンテナ内へフォルダをマウントしているので、保存すれば自動的に反映されます(ホットリロード)。反映されない場合だけ、以下でそのコンテナを再起動します。
+このリポジトリの`docker-compose.yml`は、ソースコードのボリュームマウント(ホットリロード)を行わない構成になっています(バグ入りバージョンの土台として、まず安定して再現よく起動することを優先したため)。そのため**コードを保存しただけでは反映されません**。変更を反映するには、対象サービスを再ビルドしてください。
 
 ```bash
-docker compose restart frontend
-docker compose restart backend
+docker compose up --build backend    # backendだけ再ビルド
+docker compose up --build frontend   # frontendだけ再ビルド
+docker compose up --build            # まとめて再ビルド
 ```
+
+`docker compose restart <サービス名>`は再ビルドを行わないため、コード変更には効きません(設定ファイルの再読み込みなど、イメージを作り直さない場合のみ有効です)。開発中にホットリロードを使いたい場合は、`docker-compose.yml`の該当サービスに`volumes`でソースディレクトリをマウントする設定を追加し、`command`をdevサーバー起動コマンドに変更してください(frontendは`npm run dev -- --host 0.0.0.0`、backendは`gradle bootRun`相当)。
 
 ### 依存パッケージを追加したら
 
@@ -143,7 +146,9 @@ docker compose down -v
 | backendが起動直後に落ちる/MySQLに繋がらない | MySQLの起動がbackendより遅い | 数十秒待って`docker compose ps`を再確認する。それでも直らなければ`docker compose restart backend` |
 | フロントの画面が真っ白 | ビルド失敗、または依存パッケージの不整合 | `docker compose logs -f frontend`でエラー内容を確認し、`docker compose up --build`で再ビルド |
 | Bedrock呼び出しで502エラー | `.env`のAWS認証情報・モデルID・リージョンの誤り | `backend/.env`の値を配布された値と再度見比べる |
-| 変更したコードが反映されない | マウント設定やキャッシュの問題 | 対象コンテナだけ`docker compose restart <サービス名>`、直らなければ`docker compose down`→`up --build` |
+| 変更したコードが反映されない | このリポジトリはソースをマウントしていないため、保存しただけでは反映されない | 対象サービスを`docker compose up --build <サービス名>`で再ビルドする |
+| `docker compose exec mysql mysql ...`で日本語が`?`や文字化けで表示される | データではなく`mysql`CLIクライアント自身の表示文字コードがデフォルトで`latin1`になっているだけの場合が多い | `docker compose exec mysql mysql --default-character-set=utf8mb4 -uroot -ppassword -e "SELECT ..." menu_maker`のように`--default-character-set=utf8mb4`を付けて再確認する。それでも化けている場合はDBの実データが壊れている(下記参照) |
+| 履歴画面の料理名が本当に文字化けして保存されている | `init.sql`に`SET NAMES utf8mb4;`が無い状態でDBを初期作成すると、UTF-8の日本語が二重エンコードされて実データとして壊れる(初回起動時のみ発生。既に修正済みなら発生しない) | `backend/db/init.sql`の先頭に`SET NAMES utf8mb4;`があることを確認した上で、`docker compose down -v`→`docker compose up -d`でDBボリュームを作り直す(記録は全て消えて再シードされる) |
 
 上記で解決しない場合は、`docker compose logs`の内容をそのままチームで共有してください。
 

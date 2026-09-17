@@ -3,10 +3,12 @@ package com.example.menumaker.service
 import com.example.menumaker.client.BedrockClient
 import com.example.menumaker.dto.AiCandidate
 import com.example.menumaker.dto.Candidate
+import com.example.menumaker.dto.RecipeLink
 import com.example.menumaker.dto.SuggestionResponse
 import com.example.menumaker.exception.AiResponseException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -16,6 +18,7 @@ class SuggestionService(
     private val bedrockClient: BedrockClient,
     private val objectMapper: ObjectMapper
 ) {
+    private val log = LoggerFactory.getLogger(SuggestionService::class.java)
 
     fun suggest(ingredients: List<String>): SuggestionResponse {
         val prompt = buildPrompt(ingredients)
@@ -30,7 +33,7 @@ class SuggestionService(
                 fat = candidate.fat,
                 sugar = candidate.sugar,
                 carbs = candidate.carbs,
-                recipeUrl = buildSearchUrl(candidate.name)
+                recipeLinks = buildRecipeLinks(candidate.name)
             )
         }
         return SuggestionResponse(candidates)
@@ -43,6 +46,7 @@ class SuggestionService(
             val text = extractText(rawResponse)
             objectMapper.readValue<List<AiCandidate>>(text)
         } catch (e: Exception) {
+            log.warn("failed to fetch/parse AI candidates", e)
             null
         }
     }
@@ -60,7 +64,22 @@ class SuggestionService(
 
     private fun extractText(rawResponse: String): String {
         val node = objectMapper.readTree(rawResponse)
-        return node.at("/content/0/text").asText()
+        val text = node.at("/content/0/text").asText()
+        return stripCodeFence(text)
+    }
+
+    /**
+     * Claudeはプロンプトで禁止していても```json ... ```のようにコードフェンスで
+     * 応答を囲むことがあるため、JSON配列の実体部分だけを取り出す。
+     */
+    private fun stripCodeFence(text: String): String {
+        val trimmed = text.trim()
+        val start = trimmed.indexOf('[')
+        val end = trimmed.lastIndexOf(']')
+        if (start == -1 || end == -1 || end < start) {
+            return trimmed
+        }
+        return trimmed.substring(start, end + 1)
     }
 
     private fun buildPrompt(ingredients: List<String>): String {
@@ -71,8 +90,29 @@ class SuggestionService(
             "例: [{\"name\":\"料理名\",\"description\":\"簡単な説明\",\"calories\":450,\"fat\":15,\"sugar\":40,\"carbs\":55}]"
     }
 
-    private fun buildSearchUrl(dishName: String): String {
+    /**
+     * 特定レシピへの直接リンクは公式APIがないため、料理名で複数の
+     * 大手レシピサイトのサイト内検索に飛ばす。1サイトの検索精度に
+     * 依存しないよう候補を複数用意する。
+     */
+    private fun buildRecipeLinks(dishName: String): List<RecipeLink> {
         val encoded = URLEncoder.encode(dishName, StandardCharsets.UTF_8)
-        return "https://cookpad.com/search/$encoded"
+        return listOf(
+            RecipeLink(
+                site = "cookpad",
+                label = "クックパッドで探す",
+                url = "https://cookpad.com/jp/search/$encoded"
+            ),
+            RecipeLink(
+                site = "kurashiru",
+                label = "クラシルで探す",
+                url = "https://www.kurashiru.com/search?query=$encoded"
+            ),
+            RecipeLink(
+                site = "rakuten-recipe",
+                label = "楽天レシピで探す",
+                url = "https://recipe.rakuten.co.jp/search/$encoded/"
+            )
+        )
     }
 }

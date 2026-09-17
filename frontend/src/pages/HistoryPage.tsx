@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import RecordRow from '../components/RecordRow'
+import AppHeader from '../components/AppHeader'
 import { BowlIcon } from '../components/icons'
 import { fetchRecords } from '../api/client'
 import { CookingRecord } from '../types'
@@ -19,12 +20,7 @@ export default function HistoryPage() {
 
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <h1 className="app-title">これまでの記録</h1>
-        <nav className="app-nav">
-          <Link to="/">食材入力に戻る</Link>
-        </nav>
-      </header>
+      <AppHeader title="これまでの記録" tagline={records.length > 0 ? `これまでに ${records.length} 品作りました` : undefined} />
 
       {loading && (
         <div className="loading-row">

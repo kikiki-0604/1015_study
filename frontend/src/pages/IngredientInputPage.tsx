@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import IngredientTagInput from '../components/IngredientTagInput'
+import AppHeader from '../components/AppHeader'
 import { fetchSuggestions } from '../api/client'
 import { Candidate } from '../types'
+import { SparkleIcon, ChefHatIcon } from '../components/icons'
 
 type Props = {
   onSuggestions: (candidates: Candidate[]) => void
@@ -34,33 +36,49 @@ export default function IngredientInputPage({ onSuggestions }: Props) {
 
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <h1 className="app-title">献立メーカー</h1>
-        <p className="app-tagline">冷蔵庫の中身から、今日の一品を。</p>
-        <nav className="app-nav">
-          <Link to="/history">これまでの記録を見る</Link>
-        </nav>
-      </header>
+      <AppHeader title="今日ある食材は?" tagline="冷蔵庫の中身から、AIが今日の一品を提案します。" />
 
-      <section>
-        <h2 className="section-heading">今日ある食材は?</h2>
+      <section className="hero-card">
+        <div className="hero-glow" aria-hidden="true" />
+        <span className="hero-kicker">
+          <SparkleIcon />
+          AIが献立を5件提案
+        </span>
         <p className="section-lead">思いついたものから入力してください。Enterでも追加できます。</p>
         <IngredientTagInput ingredients={ingredients} onChange={setIngredients} />
-      </section>
 
-      <div className="submit-row">
-        <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={loading}>
-          {loading ? '考え中...' : '候補を探す'}
-        </button>
+        <div className="submit-row">
+          <button type="button" className="btn btn-cta" onClick={handleSubmit} disabled={loading}>
+            {loading ? (
+              <>
+                <span className="spinner spinner-light" />
+                考え中...
+              </>
+            ) : (
+              <>
+                <SparkleIcon />
+                候補を探す
+              </>
+            )}
+          </button>
+        </div>
+
         {loading && (
-          <div className="loading-row">
-            <span className="spinner" />
-            AIが献立を考えています
+          <div className="ai-thinking">
+            <span className="ai-thinking-icon">
+              <ChefHatIcon />
+            </span>
+            AIが今日の献立を考えています
+            <span className="thinking-dots">
+              <span />
+              <span />
+              <span />
+            </span>
           </div>
         )}
-      </div>
 
-      {error && <p className="banner banner-error" role="alert">{error}</p>}
+        {error && <p className="banner banner-error" role="alert">{error}</p>}
+      </section>
     </div>
   )
 }

@@ -12,7 +12,7 @@ flowchart LR
     F -->|REST API| B[バックエンド<br/>Kotlin / Spring Boot]
     B -->|InvokeModel| BR[AWS Bedrock<br/>Claude]
     B -->|SQL| D[(MySQL)]
-    F -->|外部リンク遷移| S[Cookpad等<br/>外部レシピサイト]
+    F -->|外部リンク遷移| S[クックパッド/クラシル/楽天レシピ<br/>外部レシピサイト]
 ```
 
 | コンポーネント | 役割 |
@@ -30,16 +30,18 @@ flowchart LR
 | 項目 | 内容 |
 | --- | --- |
 | 食材入力欄 | テキスト入力、Enterまたは追加ボタンでタグ状に複数登録 |
+| よく使う食材チップ | ワンタップで代表的な食材(卵・玉ねぎ等)を追加できるショートカット |
 | 登録済み食材一覧 | タグ表示、各タグに削除(×)ボタン |
 | 送信ボタン | 押下で`/api/suggestions`を呼び、候補一覧画面へ遷移 |
-| ローディング表示 | AI応答待ちの間、送信ボタンを無効化しスピナー表示 |
-| 履歴へのリンク | 画面上部に履歴画面への導線を常設 |
+| ローディング表示 | AI応答待ちの間、送信ボタンを無効化しアニメーション付きの「考え中」表示を出す |
+| ヘッダーナビ | 画面上部に共通ヘッダー(ロゴ+「食材から探す」「履歴」導線)を常設 |
 
 ### 2. 候補一覧画面
 
 | 項目 | 内容 |
 | --- | --- |
-| 候補カード×5 | 料理名、簡単な説明を表示 |
+| 候補カード×5 | 料理名、簡単な説明、カロリー/脂質/糖質/炭水化物のミニバッジを表示 |
+| ランキングバッジ | 1〜3位のカードに金・銀・銅のNo.バッジを表示(装飾目的。AIの提案順=優先順位ではない) |
 | 「これに決める」ボタン | 各カードに配置。押下でその候補を選択し、候補詳細画面へ遷移 |
 | 再提案ボタン | 気に入った候補がない場合、入力画面に戻って再送信できる導線 |
 
@@ -48,24 +50,26 @@ flowchart LR
 | 項目 | 内容 |
 | --- | --- |
 | 料理名・説明 | 選択した候補の情報を表示 |
-| 栄養情報テーブル | カロリー・脂質・糖質・炭水化物の概算値(AI提案時に取得済み) |
-| 「この料理を作る」ボタン | 押下で、外部レシピサイトを別タブで開き、同時に当日の日付として`/api/records`に登録する |
+| 栄養情報stat表示 | カロリー・脂質・糖質・炭水化物をアイコン付きカード(stat tile)で表示(AI提案時に取得済み) |
+| レシピリンク一覧 | クックパッド・クラシル・楽天レシピ、3サイト分のボタンを表示 |
+| リンク押下時の挙動 | 押下したサイトを別タブで開き、同時に(未記録であれば)当日の日付として`/api/records`に登録する。2つ目以降のリンクを押しても記録は増えない(最初の1回のみ) |
 | 完了メッセージ | 記録後に表示し、履歴画面へのリンクを添える |
-| 「他の候補に戻る」ボタン | 候補一覧画面に戻る導線 |
+| 「候補一覧に戻る」ボタン | 候補一覧画面に戻る導線 |
 
 ### 4. 履歴画面
 
 | 項目 | 内容 |
 | --- | --- |
-| 記録一覧 | 日付(新しい順)・料理名の一覧表示 |
-| 「レシピを見る」ボタン | 各行に配置。記録時の`recipe_url`へ遷移 |
+| サマリー表示 | 「これまでに n 品作りました」を見出し下に表示 |
+| 記録一覧 | 日付(新しい順)・料理名・レシピサイト名をカード表示 |
+| 「レシピを見る」ボタン | 各カードに配置。記録時の`recipe_url`へ遷移 |
 | 空状態表示 | 記録が0件のとき「まだ記録がありません」を表示 |
 
 ```mermaid
 flowchart LR
     T[食材入力画面] -->|送信| L[候補一覧画面]
     L -->|これに決める| N[候補詳細画面]
-    N -->|この料理を作る| R[外部レシピサイト]
+    N -->|レシピリンクを開く| R[外部レシピサイト]
     N -->|記録| H[履歴画面]
     T -.履歴を見る.-> H
     H -->|レシピを見る| R
@@ -97,7 +101,7 @@ sequenceDiagram
     participant F as フロントエンド
     participant B as バックエンド
     participant D as MySQL
-    U->>F: 「完成」ボタン押下
+    U->>F: レシピリンクのいずれかを押下
     F->>B: POST /api/records
     B->>D: INSERT INTO cooking_records
     D-->>B: 登録完了
@@ -164,14 +168,13 @@ CREATE TABLE cooking_records (
 
 ### レシピ検索URL生成仕様
 
-公式APIがないため、料理名からサイト内検索URLをバックエンドで組み立てます。
+公式APIがないため、料理名からサイト内検索URLをバックエンドで組み立てます。1サイトの検索精度に結果が依存しないよう、候補ごとに複数サイトの検索リンクを生成し、`recipeLinks`配列としてレスポンスに含めます(利用者はその中から好きなサイトを選べます)。
 
-| サイト | URLパターン |
-| --- | --- |
-| クックパッド | `https://cookpad.com/search/{料理名をURLエンコード}` |
-| クラシル | `https://www.kurashiru.com/search?query={料理名をURLエンコード}` |
-
-どちらのサイトを使うかはチームで選択し、`recipeUrl`としてレスポンスに含めます。
+| サイト | site | URLパターン |
+| --- | --- | --- |
+| クックパッド | `cookpad` | `https://cookpad.com/jp/search/{料理名をURLエンコード}`(`/jp/`必須。無いと301リダイレクトが挟まる) |
+| クラシル | `kurashiru` | `https://www.kurashiru.com/search?query={料理名をURLエンコード}` |
+| 楽天レシピ | `rakuten-recipe` | `https://recipe.rakuten.co.jp/search/{料理名をURLエンコード}/` |
 
 ## 内部API仕様
 
@@ -180,7 +183,7 @@ CREATE TABLE cooking_records (
 | 項目 | 内容 |
 | --- | --- |
 | リクエスト | `{"ingredients": ["卵", "玉ねぎ"]}` |
-| 正常応答(200) | `{"candidates": [{"name": "...", "description": "...", "calories": 450, "fat": 15, "sugar": 40, "carbs": 55, "recipeUrl": "..."}]}`(5件) |
+| 正常応答(200) | `{"candidates": [{"name": "...", "description": "...", "calories": 450, "fat": 15, "sugar": 40, "carbs": 55, "recipeLinks": [{"site": "cookpad", "label": "クックパッドで探す", "url": "..."}, ...]}]}`(5件、recipeLinksは3件) |
 | 異常応答(400) | `{"error": "ingredients is required"}` (食材未入力) |
 | 異常応答(502) | `{"error": "AI提案の取得に失敗しました"}` (Bedrock呼び出し失敗) |
 
@@ -229,6 +232,8 @@ menu-maker/
 
 ### docker-compose.yml
 
+このリポジトリは「バグ入りバージョンの土台」になる前提のため、**ソースコードのボリュームマウント(ホットリロード)はあえて行わず**、ビルド済みイメージを起動する構成にしています。コードを直したら`docker compose up --build`で再ビルドが必要です(詳細は実行手順書を参照)。
+
 ```yaml
 services:
   mysql:
@@ -240,6 +245,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
@@ -250,9 +256,8 @@ services:
     env_file: ./backend/.env
     environment:
       DB_URL: jdbc:mysql://mysql:3306/menu_maker
-    volumes:
-      - ./backend:/app
-      - gradle_cache:/root/.gradle
+      DB_USER: root
+      DB_PASSWORD: password
     ports:
       - "8080:8080"
     depends_on:
@@ -261,23 +266,20 @@ services:
 
   frontend:
     build: ./frontend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     ports:
       - "5173:5173"
-    command: npm run dev -- --host 0.0.0.0
     depends_on:
       - backend
 
 volumes:
   mysql_data:
-  gradle_cache:
 ```
+
+`./backend/db/init.sql`は`docker-entrypoint-initdb.d`にマウントされ、MySQLコンテナの**初回起動時のみ**実行されます(`cooking_records`テーブル作成+デモ用サンプルデータ投入)。スキーマや初期データを変更した場合は、`docker compose down -v`でボリュームを作り直してから`up`し直す必要があります。
 
 ### 環境変数一覧(backend/.env)
 
-AWSへの認証は2方式のいずれかで行います。両方設定した場合はAPIキー方式が優先されます。
+AWSへの認証は2方式のいずれかで行います。両方設定した場合はAPIキー方式が優先されます。DB接続情報(`DB_URL`/`DB_USER`/`DB_PASSWORD`)は`.env`ではなく、上記`docker-compose.yml`の`backend.environment`でローカル固定値として直接注入しています。
 
 | 変数名 | 説明 |
 | --- | --- |
@@ -286,8 +288,6 @@ AWSへの認証は2方式のいずれかで行います。両方設定した場�
 | AWS_SECRET_ACCESS_KEY | 【方式B】Bedrock呼び出し用のシークレットキー(方式Aを使う場合は不要) |
 | AWS_REGION | Bedrockが有効なリージョン |
 | BEDROCK_MODEL_ID | 使用するClaudeのモデルID(リージョンによっては`jp.anthropic....`のような推論プロファイルID) |
-| DB_URL | MySQL接続先(Docker Compose利用時は`jdbc:mysql://mysql:3306/menu_maker`) |
-| DB_USER / DB_PASSWORD | MySQL接続用の認証情報 |
 
 `.env`は`.gitignore`に必ず追加し、`.env.example`をテンプレートとしてリポジトリに含めます。
 

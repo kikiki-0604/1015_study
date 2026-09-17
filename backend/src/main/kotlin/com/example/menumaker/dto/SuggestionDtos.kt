@@ -18,6 +18,12 @@ data class AiCandidate(
     val carbs: Int
 )
 
+data class RecipeLink(
+    val site: String,
+    val label: String,
+    val url: String
+)
+
 data class Candidate(
     val name: String,
     val description: String,
@@ -25,7 +31,7 @@ data class Candidate(
     val fat: Int,
     val sugar: Int,
     val carbs: Int,
-    val recipeUrl: String
+    val recipeLinks: List<RecipeLink>
 )
 
 data class SuggestionResponse(

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { createRecord } from '../api/client'
-import { Candidate } from '../types'
-import { CheckIcon } from '../components/icons'
+import { Candidate, RecipeLink } from '../types'
+import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, ExternalLinkIcon } from '../components/icons'
+import NutritionStats from '../components/NutritionStats'
 
 type Props = {
   candidate: Candidate | null
@@ -26,12 +27,13 @@ export default function CandidateDetailPage({ candidate }: Props) {
     )
   }
 
-  const handleMake = async () => {
+  const handleOpenRecipe = async (link: RecipeLink) => {
+    window.open(link.url, '_blank', 'noreferrer')
+    if (recorded) return
     setError(null)
-    window.open(candidate.recipeUrl, '_blank', 'noreferrer')
     try {
       const today = new Date().toISOString().slice(0, 10)
-      await createRecord(candidate.name, candidate.recipeUrl, today)
+      await createRecord(candidate.name, link.url, today)
       setRecorded(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : '記録に失敗しました')
@@ -40,43 +42,43 @@ export default function CandidateDetailPage({ candidate }: Props) {
 
   return (
     <div className="app-shell">
+      <button type="button" className="btn-back" onClick={() => navigate('/candidates')}>
+        <ArrowLeftIcon />
+        候補一覧に戻る
+      </button>
+
       <header className="app-header">
         <h1 className="app-title">{candidate.name}</h1>
         <p className="app-tagline">{candidate.description}</p>
       </header>
 
-      <table className="nutrition-table">
-        <tbody>
-          <tr>
-            <th>カロリー</th>
-            <td>{candidate.calories} kcal</td>
-          </tr>
-          <tr>
-            <th>脂質</th>
-            <td>{candidate.fat} g</td>
-          </tr>
-          <tr>
-            <th>糖質</th>
-            <td>{candidate.sugar} g</td>
-          </tr>
-          <tr>
-            <th>炭水化物</th>
-            <td>{candidate.carbs} g</td>
-          </tr>
-        </tbody>
-      </table>
+      <NutritionStats
+        calories={candidate.calories}
+        fat={candidate.fat}
+        sugar={candidate.sugar}
+        carbs={candidate.carbs}
+      />
       <p className="nutrition-note">※AIによる1人前のおおよその概算値です</p>
 
-      <div className="submit-row">
-        <button type="button" className="btn btn-accent" onClick={handleMake} disabled={recorded}>
-          <CheckIcon />
-          {recorded ? '記録しました' : 'この料理を作る'}
-        </button>
-      </div>
+      <section className="recipe-links-section">
+        <h2 className="section-heading-sm">作り方を見る</h2>
+        <p className="section-lead">気になるサイトのレシピを開いてください。開くと自動で履歴に記録されます。</p>
+        <div className="recipe-link-grid">
+          {candidate.recipeLinks.map((link) => (
+            <button key={link.site} type="button" className="recipe-link-btn" onClick={() => handleOpenRecipe(link)}>
+              <span className="recipe-link-label">
+                <ExternalLinkIcon />
+                {link.label}
+              </span>
+              <ArrowRightIcon />
+            </button>
+          ))}
+        </div>
+      </section>
 
       {recorded && (
         <p className="banner banner-success">
-          レシピを開き、履歴に記録しました。<Link to="/history">履歴を見る</Link>
+          <CheckIcon /> 履歴に記録しました。<Link to="/history">履歴を見る</Link>
         </p>
       )}
       {error && (
@@ -84,14 +86,6 @@ export default function CandidateDetailPage({ candidate }: Props) {
           {error}
         </p>
       )}
-
-      <div className="submit-row">
-        <Link to="/candidates">
-          <button type="button" className="btn btn-outline">
-            他の候補に戻る
-          </button>
-        </Link>
-      </div>
     </div>
   )
 }

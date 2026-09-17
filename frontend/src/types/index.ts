@@ -1,3 +1,9 @@
+export type RecipeLink = {
+  site: string
+  label: string
+  url: string
+}
+
 export type Candidate = {
   name: string
   description: string
@@ -5,7 +11,7 @@ export type Candidate = {
   fat: number
   sugar: number
   carbs: number
-  recipeUrl: string
+  recipeLinks: RecipeLink[]
 }
 
 export type CookingRecord = {
